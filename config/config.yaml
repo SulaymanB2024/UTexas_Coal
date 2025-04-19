@@ -1,0 +1,89 @@
+# Project Configuration File
+
+# -------------------
+# Data Paths
+# -------------------
+# Define relative paths from the project root
+data_paths:
+  raw: 'data/raw/'
+  interim: 'data/interim/'
+  processed: 'data/processed/'
+  # Example: Define a path for a specific raw file if needed
+  # raw_henry_hub: 'data/raw/henry_hub_daily.csv'
+
+# -------------------
+# Variable Definitions
+# -------------------
+# Define the target variable and potential predictor sets
+variables:
+  target_variable: 'Newcastle_FOB_6000_NAR' # Example: Specify exact column name after processing
+  date_column: 'Date' # Specify the name of the date/time index column
+
+  # Define potential groups of predictor variables
+  predictors:
+    core:
+      - 'Henry_Hub_Spot' # Example: Use consistent names post-processing
+      - 'EUA_Carbon_Futures'
+      - 'Baltic_Dry_Index'
+      - 'Global_Steel_Production' # Example, may use proxy like PMI
+    weather:
+      - 'EU_HDD'
+      - 'China_CDD'
+    inventories:
+      - 'ARA_Coal_Stocks'
+    proxies:
+      - 'China_Manufacturing_PMI'
+      # Add other proxy variable names here
+
+# -------------------
+# Data Sources & API Keys (Placeholder - Use .env for actual keys!)
+# -------------------
+# Store URLs, API endpoints, or series IDs here for reference
+# Sensitive keys should be loaded from environment variables (see README)
+data_sources:
+  eia:
+    api_url: 'https://api.eia.gov/v2/'
+    # Example series ID for Henry Hub Daily Spot Price
+    henry_hub_series_id: 'NG.RNGWHHD.D'
+  world_steel:
+    url: 'https://worldsteel.org/steel-topics/statistics/steel-statistical-yearbook' # Example URL
+  ember_ets:
+    url: 'https://ember-climate.org/data/data-tools/carbon-price-viewer/' # Example URL
+  # Add other sources as needed...
+
+# -------------------
+# Modeling Parameters (Placeholders - To be refined during modeling)
+# -------------------
+modeling:
+  # Date range for training/testing (inclusive)
+  train_start_date: '2010-01-01'
+  train_end_date: '2022-12-31'
+  test_start_date: '2023-01-01'
+  test_end_date: '2024-12-31' # Adjust as data becomes available
+
+  # Time series parameters
+  ts_lags: [1, 2, 3, 6, 12] # Lags to consider for features/models
+  rolling_window_sizes: [3, 6, 12] # Rolling window sizes for features
+
+  # Example model hyperparameters (to be tuned)
+  xgboost_params:
+    objective: 'reg:squarederror'
+    n_estimators: 100
+    learning_rate: 0.1
+    max_depth: 5
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+
+  # Cross-validation settings
+  cv_folds: 5 # For standard CV, TimeSeriesSplit will have different logic
+  cv_rolling_initial_train_size: 60 # Months for initial train set in rolling forecast
+  cv_rolling_test_size: 1 # Forecast horizon (months)
+  cv_rolling_step_size: 1 # Step size for rolling window
+
+# -------------------
+# Other Settings
+# -------------------
+project_settings:
+  random_seed: 42
+  log_level: 'INFO' # e.g., DEBUG, INFO, WARNING, ERROR
