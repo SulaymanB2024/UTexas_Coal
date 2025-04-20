@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#1F77B4" cx="100" cy="100" r="90"></circle>
+        <path d="M50,130 C70,110 80,140 100,120 C120,100 130,130 150,110" stroke="white" stroke-width="8" stroke-linecap="round"></path>
+        <path d="M50,90 L150,90" stroke="white" stroke-width="4" stroke-dasharray="5,5"></path>
+        <text font-family="Arial-BoldMT, Arial" font-size="14" font-weight="bold" fill="white">
+            <tspan x="63" y="60">COAL FORECAST</tspan>
+        </text>
+        <text font-family="Arial-BoldMT, Arial" font-size="12" font-weight="bold" fill="white">
+            <tspan x="75" y="150">SARIMAX MODEL</tspan>
+        </text>
+    </g>
+</svg>

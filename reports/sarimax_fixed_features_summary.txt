@@ -1,0 +1,44 @@
+                                     SARIMAX Results                                      
+==========================================================================================
+Dep. Variable:             Newcastle_FOB_6000_NAR   No. Observations:                   36
+Model:             SARIMAX(1, 1, 1)x(1, 0, 1, 12)   Log Likelihood                 -65.555
+Date:                            Sun, 20 Apr 2025   AIC                            151.110
+Time:                                    00:32:44   BIC                            161.555
+Sample:                                01-31-2020   HQIC                           153.376
+                                     - 12-31-2022                                         
+Covariance Type:                           robust                                         
+============================================================================================================
+                                               coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------------------------------
+Henry_Hub_Spot                              -0.9899      3.035     -0.326      0.744      -6.939       4.959
+Newcastle_FOB_6000_NAR_roll_std_3            0.6634      0.269      2.469      0.014       0.137       1.190
+Newcastle_FOB_6000_NAR_mom_change           44.9994      8.390      5.364      0.000      28.556      61.443
+Newcastle_FOB_6000_NAR_mom_change_3m_avg    68.1271     21.309      3.197      0.001      26.362     109.892
+Baltic_Dry_Index_scaled                      3.6427      1.889      1.928      0.054      -0.060       7.345
+ar.L1                                       -0.3239      0.540     -0.600      0.549      -1.383       0.735
+ma.L1                                       -0.2722      0.530     -0.514      0.607      -1.311       0.766
+ar.S.L12                                    -0.3894      0.096     -4.059      0.000      -0.577      -0.201
+ma.S.L12                                     0.6948      1.052      0.660      0.509      -1.368       2.757
+sigma2                                      23.2721     19.154      1.215      0.224     -14.270      60.814
+===================================================================================
+Ljung-Box (L1) (Q):                   0.28   Jarque-Bera (JB):                 0.39
+Prob(Q):                              0.60   Prob(JB):                         0.82
+Heteroskedasticity (H):               0.46   Skew:                             0.00
+Prob(H) (two-sided):                  0.32   Kurtosis:                         2.33
+===================================================================================
+
+Warnings:
+[1] Quasi-maximum likelihood covariance matrix used for robustness to some misspecifications; calculated using the observed information matrix (complex-step) described in Harvey (1989).
+
+Diagnostic Tests:
+
+shapiro_wilk:
+	Statistic: None
+	p-value: 2.011683668156439e-08
+ljung_box:
+	Statistic: [5.325852593103879, 9.467567631424902, 11.807669143362823]
+	p-value: [0.8683753727314758, 0.9768317759331941, 0.9988006303950898]
+
+Information Criteria:
+AIC: 151.1095331958544
+BIC: 161.55475757308864

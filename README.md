@@ -2,9 +2,20 @@
 
 ## Project Overview
 
-This project implements a quantitative framework to explain and forecast global coal prices (specifically targeting [Specify Benchmark, e.g., Newcastle FOB 6000kc NAR]) based on fundamental drivers. It follows the iterative modeling approach detailed in the project plan, progressing from baseline models to time-series econometrics and machine learning ensembles.
+This project implements a quantitative framework to explain and forecast global coal prices (specifically Newcastle FOB 6000kc NAR) based on fundamental drivers. It follows an iterative modeling approach, progressing from baseline models to time-series econometrics (ARIMAX) with feature selection via VIF analysis.
 
-The primary goal is to provide reliable 1-3 month ahead forecasts for use in trading strategy development, scenario analysis, and risk management.
+The primary goal is to provide reliable 1-3 month ahead forecasts for use in trading strategy development and risk management.
+
+## Project Status
+
+**Status: Finalized (April 2025)**
+
+The project has been completed with the following components:
+- Data ingestion and preprocessing pipeline
+- ARIMAX modeling with multicollinearity reduction via VIF
+- Model diagnostics and performance evaluation
+- Economic value assessment of forecasts via trading strategies
+- Dashboard for visualization and interactive analysis
 
 ## Repository Structure
 
@@ -15,20 +26,18 @@ The primary goal is to provide reliable 1-3 month ahead forecasts for use in tra
 │   ├── raw/              # Raw, immutable data downloads
 │   ├── interim/          # Intermediate, cleaned data
 │   └── processed/        # Final datasets for modeling
-├── notebooks/            # Jupyter notebooks for EDA and experimentation
+├── dashboard/            # Interactive Dash dashboard
+├── models/               # Saved model outputs
 ├── reports/              # Generated reports, figures, tables
-│   ├── figures/
-│   └── tables/
+│   ├── figures/          # Visualizations
+│   ├── markdown/         # Markdown reports
+│   └── economic_value_*.csv  # Trading strategy results
 ├── scripts/              # Standalone scripts for pipeline execution
 ├── src/                  # Source code modules
-│   ├── data_ingestion/
-│   ├── data_processing/
-│   ├── modeling/
-│   ├── visualization/
-│   └── utils/
-├── tests/                # Unit and integration tests
-├── .gitignore            # Files to ignore in Git
-├── LICENSE               # Project license (MIT)
+│   ├── data_processing/  # Data preparation modules
+│   ├── modeling/         # Model implementation
+│   └── utils/            # Utility functions
+├── LICENSE               # Project license
 ├── README.md             # This file
 └── requirements.txt      # Python dependencies
 ```

@@ -4,6 +4,8 @@ from statsmodels.tsa.vector_ar.vecm import select_order, select_coint_rank, VECM
 from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf
 from statsmodels.tsa.arima.model import ARIMA
 from arch import arch_model
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from typing import Dict, List, Optional, Tuple, Any
 import logging
 import os
 import sys
@@ -278,6 +280,7 @@ class TSModels:
         self.model = None
         self.d = None
         self.feature_columns = None  # Store feature columns for prediction
+        self.vif_threshold = 10.0  # Default VIF threshold
         
     def _add_seasonality(self, X):
         """Add month and quarter features if not present."""
@@ -325,44 +328,92 @@ class TSModels:
             logger.error(f"Error in stationarity testing: {e}")
             return None
             
+    def calculate_vif(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Calculate VIF for each feature in the dataset.
+        
+        Args:
+            X (pd.DataFrame): Feature matrix
+            
+        Returns:
+            pd.DataFrame: DataFrame with VIF scores for each feature
+        """
+        try:
+            vif_data = pd.DataFrame()
+            vif_data["Feature"] = X.columns
+            vif_data["VIF"] = [variance_inflation_factor(X.values, i) 
+                              for i in range(X.shape[1])]
+            return vif_data.sort_values('VIF', ascending=False)
+            
+        except Exception as e:
+            logger.error(f"Error calculating VIF scores: {e}")
+            return None
+            
+    def iterative_vif_selection(self, X: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
+        """Iteratively remove features with highest VIF until all are below threshold.
+        
+        Args:
+            X (pd.DataFrame): Feature matrix
+            
+        Returns:
+            Tuple[pd.DataFrame, List[str]]: (Selected features DataFrame, List of removed features)
+        """
+        try:
+            features = X.columns.tolist()
+            removed_features = []
+            
+            while True:
+                if len(features) < 2:
+                    break
+                    
+                vif = self.calculate_vif(X[features])
+                if vif is None:
+                    break
+                    
+                max_vif = vif['VIF'].max()
+                if max_vif < self.vif_threshold:
+                    break
+                    
+                feature_to_remove = vif.loc[vif['VIF'].idxmax(), 'Feature']
+                features.remove(feature_to_remove)
+                removed_features.append((feature_to_remove, max_vif))
+                
+                logger.info(f"Removed feature {feature_to_remove} with VIF: {max_vif:.2f}")
+                
+            return X[features], removed_features
+            
+        except Exception as e:
+            logger.error(f"Error in VIF-based feature selection: {e}")
+            return X, []
+            
     def prepare_features(self, X):
         """Prepare features for ARIMAX model."""
         try:
             # Add seasonality features
             X = self._add_seasonality(X)
             
-            # Select important predictors
-            essential_features = []
+            # Select features and handle VIF
+            X_prepared = X.copy()
+            X_prepared = X_prepared.replace([np.inf, -np.inf], np.nan)
+            X_prepared = X_prepared.ffill().bfill()
             
-            # Add log-transformed features
-            log_features = [col for col in X.columns if '_log' in col]
-            essential_features.extend(log_features)
-            
-            # Add lagged features (exclude target lags beyond order 3)
-            lag_features = [col for col in X.columns if '_lag_' in col 
-                          and (not col.startswith('Newcastle_FOB_6000_NAR') 
-                               or any(f'_lag_{i}' in col for i in [1,2,3]))]
-            essential_features.extend(lag_features)
-            
-            # Add scaled features
-            scaled_features = [col for col in X.columns if '_scaled' in col]
-            essential_features.extend(scaled_features)
-            
-            # Add seasonality
-            essential_features.extend(['month', 'quarter'])
-            
-            # Remove duplicates while preserving order
-            essential_features = list(dict.fromkeys(essential_features))
-            
-            # Store feature columns for prediction
-            self.feature_columns = essential_features
-            
-            # Return cleaned features
-            X_clean = X[essential_features].copy()
-            X_clean = X_clean.replace([np.inf, -np.inf], np.nan)
-            X_clean = X_clean.ffill().bfill()
-            
-            return X_clean
+            # Calculate initial VIF scores
+            initial_vif = self.calculate_vif(X_prepared)
+            if initial_vif is not None:
+                logger.info("Initial VIF scores:")
+                logger.info("\n" + str(initial_vif))
+                
+                # Perform VIF-based feature selection
+                X_selected, removed_features = self.iterative_vif_selection(X_prepared)
+                if removed_features:
+                    logger.info("\nRemoved features due to high VIF:")
+                    for feature, vif in removed_features:
+                        logger.info(f"{feature}: {vif:.2f}")
+                
+                # Store selected feature columns
+                self.feature_columns = X_selected.columns.tolist()
+                return X_selected
+                
+            return X_prepared
             
         except Exception as e:
             logger.error(f"Error preparing features: {e}")

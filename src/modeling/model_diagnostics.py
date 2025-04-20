@@ -213,7 +213,7 @@ def plot_model_diagnostics(residuals, config=None):
     return fig
 
 def compare_in_out_sample_metrics(
-    model: Any,
+    model,
     train_data: pd.DataFrame,
     test_data: pd.DataFrame,
     target_var: str
@@ -227,54 +227,75 @@ def compare_in_out_sample_metrics(
         target_var: Name of target variable
         
     Returns:
-        Dictionary containing metrics for both train and test sets
+        Dictionary containing metrics for train and test sets
     """
-    # Ensure proper datetime index
-    train_data.index = pd.to_datetime(train_data.index)
-    test_data.index = pd.to_datetime(test_data.index)
-    
-    # Generate predictions
-    X_train = train_data.drop(columns=[target_var])
-    y_train = train_data[target_var]
-    train_pred, _ = model.predict(X_train)
-    
-    X_test = test_data.drop(columns=[target_var])
-    y_test = test_data[target_var]
-    test_pred, _ = model.predict(X_test)
-    
-    # Ensure predictions have proper datetime index
-    train_pred.index = pd.to_datetime(train_pred.index)
-    test_pred.index = pd.to_datetime(test_pred.index)
-    
-    # Align indices
-    common_train_idx = train_pred.index.intersection(y_train.index)
-    common_test_idx = test_pred.index.intersection(y_test.index)
-    
-    # Select data with aligned indices
-    y_train_aligned = y_train[common_train_idx]
-    train_pred_aligned = train_pred[common_train_idx]
-    y_test_aligned = y_test[common_test_idx]
-    test_pred_aligned = test_pred[common_test_idx]
-    
-    # Calculate metrics
     metrics = {
         'train': {},
         'test': {}
     }
     
-    # Training metrics
-    metrics['train']['mae'] = mean_absolute_error(y_train_aligned, train_pred_aligned)
-    metrics['train']['rmse'] = np.sqrt(mean_squared_error(y_train_aligned, train_pred_aligned))
-    metrics['train']['mape'] = mean_absolute_percentage_error(y_train_aligned, train_pred_aligned)
-    metrics['train']['r2'] = r2_score(y_train_aligned, train_pred_aligned)
-    
-    # Test metrics
-    metrics['test']['mae'] = mean_absolute_error(y_test_aligned, test_pred_aligned)
-    metrics['test']['rmse'] = np.sqrt(mean_squared_error(y_test_aligned, test_pred_aligned))
-    metrics['test']['mape'] = mean_absolute_percentage_error(y_test_aligned, test_pred_aligned)
-    metrics['test']['r2'] = r2_score(y_test_aligned, test_pred_aligned)
-    
-    return metrics
+    try:
+        # Get predictions for both sets
+        y_train = train_data[target_var]
+        y_test = test_data[target_var]
+        
+        X_train = train_data.drop(columns=[target_var])
+        X_test = test_data.drop(columns=[target_var])
+        
+        train_pred, _ = model.predict(X_train)
+        test_pred, _ = model.predict(X_test)
+        
+        # Debug prediction alignment
+        logger.info("\nPrediction Alignment Check:")
+        logger.info(f"Train data range: {y_train.index.min()} to {y_train.index.max()}")
+        logger.info(f"Test data range: {y_test.index.min()} to {y_test.index.max()}")
+        if train_pred is not None:
+            logger.info(f"Train predictions range: {train_pred.index.min()} to {train_pred.index.max()}")
+        if test_pred is not None:
+            logger.info(f"Test predictions range: {test_pred.index.min()} to {test_pred.index.max()}")
+        
+        # Align indices
+        if train_pred is not None and len(train_pred) > 0:
+            common_train_idx = y_train.index.intersection(train_pred.index)
+            y_train_aligned = y_train[common_train_idx]
+            train_pred_aligned = train_pred[common_train_idx]
+            
+            logger.info(f"\nTrain set alignment:")
+            logger.info(f"Original y_train shape: {y_train.shape}")
+            logger.info(f"Original train_pred shape: {train_pred.shape}")
+            logger.info(f"Aligned shapes: {y_train_aligned.shape}, {train_pred_aligned.shape}")
+            
+            if len(y_train_aligned) > 0:
+                metrics['train']['mae'] = mean_absolute_error(y_train_aligned, train_pred_aligned)
+                metrics['train']['rmse'] = np.sqrt(mean_squared_error(y_train_aligned, train_pred_aligned))
+                metrics['train']['mape'] = mean_absolute_percentage_error(y_train_aligned, train_pred_aligned)
+                metrics['train']['r2'] = r2_score(y_train_aligned, train_pred_aligned)
+            else:
+                logger.error("No overlapping timestamps found in training set")
+        
+        if test_pred is not None and len(test_pred) > 0:
+            common_test_idx = y_test.index.intersection(test_pred.index)
+            y_test_aligned = y_test[common_test_idx]
+            test_pred_aligned = test_pred[common_test_idx]
+            
+            logger.info(f"\nTest set alignment:")
+            logger.info(f"Original y_test shape: {y_test.shape}")
+            logger.info(f"Original test_pred shape: {test_pred.shape}")
+            logger.info(f"Aligned shapes: {y_test_aligned.shape}, {test_pred_aligned.shape}")
+            
+            if len(y_test_aligned) > 0:
+                metrics['test']['mae'] = mean_absolute_error(y_test_aligned, test_pred_aligned)
+                metrics['test']['rmse'] = np.sqrt(mean_squared_error(y_test_aligned, test_pred_aligned))
+                metrics['test']['mape'] = mean_absolute_percentage_error(y_test_aligned, test_pred_aligned)
+                metrics['test']['r2'] = r2_score(y_test_aligned, test_pred_aligned)
+            else:
+                logger.error("No overlapping timestamps found in test set")
+                
+        return metrics
+        
+    except Exception as e:
+        logger.error(f"Error calculating metrics: {str(e)}", exc_info=True)
+        return metrics
 
 def save_model_summary(model, filepath):
     """Save model summary to a text file.

@@ -270,50 +270,41 @@ class EnhancedSARIMAX:
         logger.info(f"AIC: {self.result.aic:.4f}")
         logger.info(f"BIC: {self.result.bic:.4f}")
         
-    def predict(self, X_train=None, X_test=None):
-        """
-        Generate predictions for both training and test sets.
+    def predict(self, X: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
+        """Generate predictions using the fitted SARIMAX model.
         
         Args:
-            X_train (pd.DataFrame): Training features for in-sample predictions
-            X_test (pd.DataFrame): Test features for out-of-sample predictions
-        
+            X: Feature matrix for prediction period
+            
         Returns:
-            tuple: (train_predictions, test_predictions)
+            Tuple of (point predictions, confidence intervals)
         """
-        if not hasattr(self, 'result'):
-            raise ValueError("Model must be fitted before making predictions")
-        
-        train_pred = None
-        test_pred = None
-        
-        # Generate in-sample predictions for training data
-        if X_train is not None:
-            X_train_filtered = X_train[self.selected_features] if self.selected_features else None
-            train_pred = self.result.get_prediction(
-                start=0,
-                end=len(X_train) - 1,
-                exog=X_train_filtered
-            ).predicted_mean
-        
-        # Generate out-of-sample predictions for test data
-        if X_test is not None:
-            X_test_filtered = X_test[self.selected_features] if self.selected_features else None
+        try:
+            if self.result is None:
+                logger.error("Model not fitted. Call fit() first.")
+                return None, None
+                
+            # Ensure X has the same features used in training
+            if self.selected_features is not None:
+                X = X[self.selected_features]
+                
+            # Preprocess prediction data using training medians
+            X_processed, _ = self.preprocess_data(X, fit=False)
             
-            # Calculate the correct start and end points for test predictions
-            start = len(X_train) if X_train is not None else 0
-            end = start + len(X_test) - 1
+            # Generate predictions for the specific period defined by X's index
+            start = X_processed.index[0]
+            end = X_processed.index[-1]
+            predictions = self.result.get_prediction(start=start, end=end, exog=X_processed)
             
-            # Ensure exogenous variables match the forecast period
-            if X_test_filtered is not None and len(X_test_filtered) != (end - start + 1):
-                raise ValueError(f"Length of test exogenous variables ({len(X_test_filtered)}) must match forecast period ({end - start + 1})")
+            # Extract point predictions and confidence intervals
+            pred_mean = predictions.predicted_mean
+            pred_ci = predictions.conf_int()
             
-            test_pred = self.result.forecast(
-                steps=len(X_test),
-                exog=X_test_filtered
-            )
-        
-        return train_pred, test_pred
+            return pred_mean, pred_ci
+            
+        except Exception as e:
+            logger.error(f"Error generating predictions: {str(e)}", exc_info=True)
+            return None, None
     
     def forecast(self, steps, exog=None):
         """

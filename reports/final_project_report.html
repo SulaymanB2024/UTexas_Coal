@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coal Price Forecasting - Final Project Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        h2 {
+            margin-top: 30px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        .status {
+            text-align: center;
+            color: #27ae60;
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .positive {
+            color: green;
+        }
+        .negative {
+            color: red;
+        }
+        .section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+        }
+        .plot-placeholder {
+            width: 100%;
+            height: 300px;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Coal Price Forecasting</h1>
+        <div class="status">Project Status: Finalized (April 2025)</div>
+        
+        <div class="section">
+            <h2>Project Overview</h2>
+            <p>
+                This project implements a quantitative framework to explain and forecast global coal prices 
+                (specifically Newcastle FOB 6000kc NAR) based on fundamental drivers. It follows an iterative 
+                modeling approach, progressing from baseline models to time-series econometrics (ARIMAX) 
+                with feature selection via VIF analysis.
+            </p>
+            <p>
+                The primary goal is to provide reliable 1-3 month ahead forecasts for use in trading strategy 
+                development and risk management.
+            </p>
+        </div>
+        
+        <div class="section">
+            <h2>Model Performance</h2>
+            <h3>Final Model Specification</h3>
+            <p>
+                The final selected model is a SARIMAX(1,1,1)(1,0,1,12) model with the following parameters:
+            </p>
+            <ul>
+                <li>Non-seasonal AR(1), differencing(1), MA(1)</li>
+                <li>Seasonal AR(1), no seasonal differencing, MA(1), period=12 months</li>
+                <li>Information criteria: AIC = 151.1095, BIC = 161.5548</li>
+            </ul>
+            
+            <h3>Performance Metrics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Training Set</th>
+                        <th>Test Set</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R²</td>
+                        <td class="negative">-0.9388</td>
+                        <td class="positive">0.3302</td>
+                    </tr>
+                    <tr>
+                        <td>RMSE</td>
+                        <td>18.9249</td>
+                        <td>11.0654</td>
+                    </tr>
+                    <tr>
+                        <td>MAE</td>
+                        <td>10.0590</td>
+                        <td>9.4886</td>
+                    </tr>
+                    <tr>
+                        <td>MAPE</td>
+                        <td>9.50%</td>
+                        <td>7.66%</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Model Diagnostic Tests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Result</th>
+                        <th>p-value</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ljung-Box (lag 10)</td>
+                        <td>5.3259</td>
+                        <td class="positive">0.8684</td>
+                        <td>No significant autocorrelation in residuals</td>
+                    </tr>
+                    <tr>
+                        <td>Ljung-Box (lag 20)</td>
+                        <td>9.4676</td>
+                        <td class="positive">0.9768</td>
+                        <td>No significant autocorrelation in residuals</td>
+                    </tr>
+                    <tr>
+                        <td>Shapiro-Wilk</td>
+                        <td>-</td>
+                        <td class="negative">0.0000</td>
+                        <td>Residuals are non-normal</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>Feature Selection</h2>
+            <p>
+                A variance inflation factor (VIF) analysis was conducted to address multicollinearity among the 
+                engineered features. Features with high VIF values were iteratively removed until all remaining
+                features had acceptable VIF values.
+            </p>
+            
+            <h3>Selected Features</h3>
+            <ul>
+                <li>Henry_Hub_Spot</li>
+                <li>Newcastle_FOB_6000_NAR_roll_std_3</li>
+                <li>Newcastle_FOB_6000_NAR_mom_change</li>
+                <li>Newcastle_FOB_6000_NAR_mom_change_3m_avg</li>
+                <li>Baltic_Dry_Index_scaled</li>
+            </ul>
+            
+            <h3>Removed Features (High VIF)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>VIF Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Baltic_Dry_Index</td>
+                        <td class="negative">218273.22</td>
+                    </tr>
+                    <tr>
+                        <td>EUA_Carbon_Futures_log</td>
+                        <td class="negative">89564.29</td>
+                    </tr>
+                    <tr>
+                        <td>Newcastle_FOB_6000_NAR_roll_mean_3</td>
+                        <td class="negative">69509.30</td>
+                    </tr>
+                    <tr>
+                        <td>Newcastle_FOB_6000_NAR_log</td>
+                        <td class="negative">12558.37</td>
+                    </tr>
+                    <tr>
+                        <td>Henry_Hub_Spot_log</td>
+                        <td class="negative">1821.77</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>Economic Value Assessment</h2>
+            <p>
+                Trading strategies based on the model's predictions were evaluated against a simple buy-and-hold benchmark.
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Total Return</th>
+                        <th>Annualized Return</th>
+                        <th>Sharpe Ratio</th>
+                        <th>Max Drawdown</th>
+                        <th>Win Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Directional</td>
+                        <td class="negative">-22.22%</td>
+                        <td class="negative">-23.98%</td>
+                        <td class="negative">-0.53</td>
+                        <td class="negative">-47.36%</td>
+                        <td>45.45%</td>
+                    </tr>
+                    <tr>
+                        <td>Threshold</td>
+                        <td>0.00%</td>
+                        <td>0.00%</td>
+                        <td>0.00</td>
+                        <td>0.00%</td>
+                        <td>0.00%</td>
+                    </tr>
+                    <tr>
+                        <td>Combined</td>
+                        <td>0.00%</td>
+                        <td>0.00%</td>
+                        <td>0.00</td>
+                        <td>0.00%</td>
+                        <td>0.00%</td>
+                    </tr>
+                    <tr>
+                        <td>Buy-and-Hold</td>
+                        <td class="positive">+15.66%</td>
+                        <td class="positive">+17.20%</td>
+                        <td class="positive">+0.32</td>
+                        <td class="negative">-22.47%</td>
+                        <td>54.55%</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p>
+                The economic value analysis reveals that trading strategies based on the model's forecasts 
+                did not outperform a simple buy-and-hold approach during the test period. This highlights the 
+                gap between statistical accuracy and economic utility of the forecasts.
+            </p>
+        </div>
+        
+        <div class="section">
+            <h2>Conclusions and Limitations</h2>
+            
+            <h3>Key Findings</h3>
+            <ul>
+                <li>The model successfully addresses autocorrelation issues (high p-values in Ljung-Box tests)</li>
+                <li>Modest predictive performance on test data (R² of 0.33, MAPE of 7.66%)</li>
+                <li>Poor in-sample fit (R² of -0.94), indicating limitations in capturing training data patterns</li>
+                <li>Non-normal residuals, suggesting deviations from ideal model assumptions</li>
+                <li>Limited economic value, with trading strategies failing to outperform a simple buy-and-hold benchmark</li>
+            </ul>
+            
+            <h3>Limitations</h3>
+            <ul>
+                <li>Poor in-sample performance despite reasonable out-of-sample metrics</li>
+                <li>Limited test set explanatory power (R² of only 0.33)</li>
+                <li>Non-normal residuals violating key model assumptions</li>
+                <li>Inability to generate economically valuable forecasts for trading</li>
+                <li>Challenges with model convergence during estimation</li>
+            </ul>
+            
+            <h3>Future Work</h3>
+            <ul>
+                <li>Explore alternative models (neural networks, hybrid approaches)</li>
+                <li>Incorporate additional relevant exogenous variables</li>
+                <li>Refine trading strategies with lower thresholds for signal generation</li>
+                <li>Conduct backtesting over longer historical periods</li>
+                <li>Develop a web-based dashboard for interactive forecasting</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Coal Price Forecasting Model • Last updated: April 20, 2025</p>
+        <p>University of Texas at Austin, Energy and Earth Resources Program</p>
+    </div>
+</body>
+</html>
