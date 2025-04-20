@@ -82,6 +82,51 @@ modeling:
   cv_rolling_step_size: 1 # Step size for rolling window
 
 # -------------------
+# Scenario Analysis Parameters
+# -------------------
+scenario_analysis:
+  general:
+    num_simulations: 1000
+    forecast_horizon: 12  # months
+    baseline_method: 'persist'  # how to project exogenous variables in baseline case
+    random_seed: 42
+    
+  scenarios:
+    baseline:
+      name: 'Baseline'
+      description: 'Business as usual scenario'
+      type: 'baseline'
+      
+    carbon_shock:
+      name: 'Carbon Price Shock'
+      description: 'Sustained increase in carbon prices'
+      variable: 'EUA_Carbon_Futures'
+      shock_pct: 0.40  # 40% increase
+      duration: 6  # months
+      type: 'sustained'
+      
+    gas_shock:
+      name: 'Gas Price Shock'
+      description: 'Temporary decrease in natural gas prices'
+      variable: 'Henry_Hub_Spot'
+      shock_pct: -0.50  # 50% decrease
+      duration: 3  # months
+      type: 'temporary'
+      
+    freight_shock:
+      name: 'Freight Cost Shock'
+      description: 'Sustained increase in shipping costs'
+      variable: 'Baltic_Dry_Index'
+      shock_pct: 0.30  # 30% increase
+      duration: 6  # months
+      type: 'sustained'
+      
+  output_settings:
+    results_file: 'reports/scenario_analysis_mc_results.csv'
+    plot_file: 'reports/figures/scenario_analysis_mc_forecast_paths.html'
+    percentiles: [5, 25, 50, 75, 95]  # for summary statistics
+
+# -------------------
 # Other Settings
 # -------------------
 project_settings:
